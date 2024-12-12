@@ -19,12 +19,16 @@ class SampleNumberException(Exception):
 class SampleListReader(object):
 
     def __init__(self):
-        self.sample_list = None
+        self.sample_frame = None
         return
 
     @property
     def sample_count(self):
-        return len(self.sample_list.index)
+        return len(self.sample_frame.index)
+
+    @property
+    def samples(self):
+        return sample_frame['id'].tolist()
 
     def readFile(self, filename, project_name = None, header_row = None, sample_name_header = None):        
         self.path = os.path.abspath(filename)
@@ -78,19 +82,19 @@ class SampleListReader(object):
         ## Read the data from the excel file with Pandas
         data = pd.read_excel(self.path, engine='openpyxl', skiprows=self.head_row - 1, nrows=(self.last_row - self.head_row))
         ## Create new data frame with only the columns we want
-        self.sample_list = pd.DataFrame(data=data[[namestr]].values, columns=['name'])
+        self.sample_frame = pd.DataFrame(data=data[[namestr]].values, columns=['id'])
 
         ####  Get digits from end of sample identifier for sample number
-        def parseSampleNumber(name):
-            match = re.search(r'_(\d+)$', name)
+        def parseSampleNumber(id):
+            match = re.search(r'_(\d+)$', id)
             if match:
                 return match.group(1)
             else:
                 raise SampleNumberException()
 
-        self.sample_list['number'] = self.sample_list['name'].apply(parseSampleNumber)
-        self.sample_list['method'] = "None"
-        self.sample_list['position'] = "NA"
+        self.sample_frame['number'] = self.sample_frame['id'].apply(parseSampleNumber)
+        self.sample_frame['method'] = "None"
+        self.sample_frame['position'] = "NA"
 
         #########  This shouldn't be needed with the new sample lists but I'm leaving it here in case something breaks and we need it later. 
         # ## Sanitize the names to remove offensive characters
@@ -100,7 +104,7 @@ class SampleListReader(object):
         #     if newName[0].isdigit():
         #         newName = 'S' + newName
         #     return newName
-        # self.sample_list['name'] = self.sample_list['name'].apply(sanitizeName)
+        # self.sample_frame['name'] = self.sample_frame['name'].apply(sanitizeName)
         
         return
 
@@ -108,7 +112,7 @@ class SampleListReader(object):
       #  data - header name as string
       #  index - index to sample list
     def getSampleData(self, data, index):
-        return self.sample_list[data][index]
+        return self.sample_frame[data][index]
 
 
         
