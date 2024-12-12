@@ -18,8 +18,10 @@ class SampleNumberException(Exception):
 
 class SampleListReader(object):
 
-    def __init__(self):
+    def __init__(self, filename=None):
         self.sample_frame = None
+        if filename:
+            readFile(filename)
         return
 
     ### Main method, read in and parse sample list file
