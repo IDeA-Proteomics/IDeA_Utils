@@ -13,6 +13,9 @@ class HeaderNotFoundException(Exception):
 class SampleNameHeaderException(Exception):
     pass
 
+class SampleNumberException(Exception):
+    pass
+
 class SampleListReader(object):
 
     def __init__(self):
@@ -33,7 +36,7 @@ class SampleListReader(object):
             if match:
                 self.project_name = match.group(1)
             else:
-                raise SampleListFileNameException       
+                raise SampleListFileNameException()
         else:
             self.project_name = project_name
 
@@ -41,7 +44,7 @@ class SampleListReader(object):
         wb = load_workbook(self.path, data_only=True)
         sh = wb.worksheets[0]
 
-        namestr = 'sample name'
+        namestr = 'sample identifier'
         numstr = 'sample number'
 
         self.head_row = None
@@ -51,17 +54,17 @@ class SampleListReader(object):
         for i in range(1, sh.max_row + 1):
             if self.head_row == None:
                 for j in range (1, sh.max_column + 1):
-                    if sh.cell(row = i, column=j).value == numstr:
+                    if sh.cell(row = i, column=j).value == namestr:
                         self.head_row = i
                         break        
 
         ## if no header row found, throw exception
         if self.head_row == None:
-            raise HeaderNotFoundException
+            raise HeaderNotFoundException()
 
-        ## make sure name header is correct or throw exception
-        if namestr not in [cell.value for cell in sh[self.head_row]]:
-            raise SampleNameHeaderException            
+        # ## make sure name header is correct or throw exception
+        # if namestr not in [cell.value for cell in sh[self.head_row]]:
+        #     raise SampleNameHeaderException            
 
         ## find last sample row (assume first empty row is end)
         for i in range(self.head_row, sh.max_row + 1):
@@ -75,28 +78,30 @@ class SampleListReader(object):
         ## Read the data from the excel file with Pandas
         data = pd.read_excel(self.path, engine='openpyxl', skiprows=self.head_row - 1, nrows=(self.last_row - self.head_row))
         ## Create new data frame with only the columns we want
-        self.sample_list = pd.DataFrame(data=data[[numstr, namestr]].values, columns=['number', 'name'])
+        self.sample_list = pd.DataFrame(data=data[[namestr]].values, columns=['name'])
+
+        ####  Get digits from end of sample identifier for sample number
+        def parseSampleNumber(name):
+            match = re.search(r'_(\d+)$', name)
+            if match:
+                return match.group(1)
+            else:
+                raise SampleNumberException()
+
+        self.sample_list['number'] = self.sample_list['name'].apply(parseSampleNumber)
         self.sample_list['method'] = "None"
         self.sample_list['position'] = "NA"
 
-        ## Sanitize the names to remove offensive characters
-        ### Remove offensive characters that will mess up file names or Bioinformatics code
-        def sanitizeName(name):
-            newName = re.sub(r"[ +\[\]\.\+!/@#\$%\^&\*\(\)\?\|\\;:]+", '_', str(name))
-            if newName[0].isdigit():
-                newName = 'S' + newName
-            return newName
-        self.sample_list['name'] = self.sample_list['name'].apply(sanitizeName)
-
-        ## add sample number to sample name to conform to Bioinformatics code
-        for i in self.sample_list.index:
-            name = self.sample_list.loc[i, 'name']
-            if type(self.sample_list.loc[i, 'number']) == int:
-                name = name + "_sample_{:02d}".format(self.sample_list.loc[i, 'number'])
-            else:
-                name = name + "_sample_{}".format(self.sample_list.loc[i, 'number'])
-            self.sample_list.at[i, 'name'] = name
-
+        #########  This shouldn't be needed with the new sample lists but I'm leaving it here in case something breaks and we need it later. 
+        # ## Sanitize the names to remove offensive characters
+        # ### Remove offensive characters that will mess up file names or Bioinformatics code
+        # def sanitizeName(name):
+        #     newName = re.sub(r"[ +\[\]\.\+!/@#\$%\^&\*\(\)\?\|\\;:]+", '_', str(name))
+        #     if newName[0].isdigit():
+        #         newName = 'S' + newName
+        #     return newName
+        # self.sample_list['name'] = self.sample_list['name'].apply(sanitizeName)
+        
         return
 
     ### get entry from sample table
