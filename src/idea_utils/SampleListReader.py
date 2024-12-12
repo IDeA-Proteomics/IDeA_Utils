@@ -25,7 +25,17 @@ class SampleListReader(object):
 
     def readFile(self, filename, project_name = None, header_row = None, sample_name_header = None):        
         self.path = os.path.abspath(filename)
-        self.project_name = self.parseProjectName() if project_name is None else project_name
+        ### if project name not provided then parse it from the sample list file name
+        if project_name is None:
+            split_name = self.path.split('\\')[-1]
+            proj_pattern = r'([^/]+_\d{6}.*)(?=_SampleList.xlsx)'
+            match = re.match(proj_pattern, split_name)
+            if match:
+                self.project_name = match.group(1)
+            else:
+                raise SampleListFileNameException       
+        else:
+            self.project_name = project_name
 
          ####  Examine XLS file.  Find row with headers and last sample (first empty after samples)
         wb = load_workbook(self.path, data_only=True)
@@ -70,7 +80,13 @@ class SampleListReader(object):
         self.sample_list['position'] = "NA"
 
         ## Sanitize the names to remove offensive characters
-        self.sample_list['name'] = self.sample_list['name'].apply(self.sanitizeName)
+        ### Remove offensive characters that will mess up file names or Bioinformatics code
+        def sanitizeName(name):
+            newName = re.sub(r"[ +\[\]\.\+!/@#\$%\^&\*\(\)\?\|\\;:]+", '_', str(name))
+            if newName[0].isdigit():
+                newName = 'S' + newName
+            return newName
+        self.sample_list['name'] = self.sample_list['name'].apply(sanitizeName)
 
         ## add sample number to sample name to conform to Bioinformatics code
         for i in self.sample_list.index:
@@ -82,25 +98,6 @@ class SampleListReader(object):
             self.sample_list.at[i, 'name'] = name
 
         return
-
-    ### Remove offensive characters that will mess up file names or Bioinformatics code
-    def sanitizeName(self, name):
-        newName = re.sub(r"[ +\[\]\.\+!/@#\$%\^&\*\(\)\?\|\\;:]+", '_', str(name))
-        if newName[0].isdigit():
-            newName = 'S' + newName
-        return newName
-
-    ### get the project name from the sample list file name
-
-    def parseProjectName(self):
-        split_name = self.path.split('\\')[-1]
-        proj_pattern = r'([^/]+_\d{6}.*)(?=_SampleList.xlsx)'
-        match = re.match(proj_pattern, split_name)
-        if match:
-            name = match.group(1)
-        else:
-            raise SampleListFileNameException       
-        return name
 
     ### get entry from sample table
       #  data - header name as string
