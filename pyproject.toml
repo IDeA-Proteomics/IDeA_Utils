@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "IDeA_Utils"
+name = "idea_utils"
 version = "0.0.1"
 authors = [
   { name="David Caldwell", email="dcaldwell3@uams.edu" },
