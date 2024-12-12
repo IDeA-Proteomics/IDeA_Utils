@@ -22,14 +22,7 @@ class SampleListReader(object):
         self.sample_frame = None
         return
 
-    @property
-    def sample_count(self):
-        return len(self.sample_frame.index)
-
-    @property
-    def samples(self):
-        return sample_frame['id'].tolist()
-
+    ### Main method, read in and parse sample list file
     def readFile(self, filename, project_name = None, header_row = None, sample_name_header = None):        
         self.path = os.path.abspath(filename)
         ### if project name not provided then parse it from the sample list file name
@@ -88,7 +81,7 @@ class SampleListReader(object):
         def parseSampleNumber(id):
             match = re.search(r'_(\d+)$', id)
             if match:
-                return match.group(1)
+                return int(match.group(1))
             else:
                 raise SampleNumberException()
 
@@ -107,6 +100,24 @@ class SampleListReader(object):
         # self.sample_frame['name'] = self.sample_frame['name'].apply(sanitizeName)
         
         return
+
+    
+    @property
+    def sample_count(self):
+        return len(self.sample_frame.index)
+
+    ### List of sample ID's
+    @property
+    def sample_ids(self):
+        return sample_frame['id'].tolist()
+
+    ### List of sample numbers as int
+    @property
+    def sample_numbers(self):
+        l - sample_frame['number'].tolist()
+        for i,x in enumerate(l):
+            l[i] = int(x)
+        return l
 
     ### get entry from sample table
       #  data - header name as string
