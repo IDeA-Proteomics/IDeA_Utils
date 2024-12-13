@@ -116,7 +116,7 @@ class SampleListReader(object):
     ### List of sample numbers as int
     @property
     def sample_numbers(self):
-        l - self.sample_frame['number'].tolist()
+        l = self.sample_frame['number'].tolist()
         for i,x in enumerate(l):
             l[i] = int(x)
         return l
