@@ -111,7 +111,7 @@ class SampleListReader(object):
     ### List of sample ID's
     @property
     def sample_ids(self):
-        return sample_frame['id'].tolist()
+        return self.sample_frame['id'].tolist()
 
     ### List of sample numbers as int
     @property
