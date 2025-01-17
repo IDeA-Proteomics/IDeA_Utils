@@ -29,7 +29,7 @@ class SampleListReader(object):
         self.path = os.path.abspath(filename)
         ### if project name not provided then parse it from the sample list file name
         if project_name is None:
-            split_name = self.path.split('\\')[-1]
+            split_name = self.path.split(os.sep)[-1]
             proj_pattern = r'([^/]+_\d{6}.*)(?=_SampleList.xlsx)'
             match = re.match(proj_pattern, split_name)
             if match:
@@ -49,7 +49,7 @@ class SampleListReader(object):
         self.head_row = None
         self.last_row = None
 
-        ## Find header row by searching for 'sample number' 
+        ## Find header row by searching for 'sample identifier' 
         for i in range(1, sh.max_row + 1):
             if self.head_row == None:
                 for j in range (1, sh.max_column + 1):
@@ -88,8 +88,8 @@ class SampleListReader(object):
                 raise SampleNumberException()
 
         self.sample_frame['number'] = self.sample_frame['id'].apply(parseSampleNumber)
-        self.sample_frame['method'] = "None"
-        self.sample_frame['position'] = "NA"
+        # self.sample_frame['method'] = "None"
+        # self.sample_frame['position'] = "NA"
 
         #########  This shouldn't be needed with the new sample lists but I'm leaving it here in case something breaks and we need it later. 
         # ## Sanitize the names to remove offensive characters
