@@ -10,7 +10,8 @@ authors = [
 ]
 dependencies = [
     "pandas",
-    "openpyxl"
+    "openpyxl",
+    "reportlab"
 ]
 description = "Utilities for handling proteomics samples"
 requires-python = ">=3.10"
