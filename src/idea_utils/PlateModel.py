@@ -384,7 +384,7 @@ class Plate(OrderedDict):
         for well in plate.positions:
             label = str(plate[well.label].number) if plate[well.label] is not None else ''
             x,y = getWellCenter(well)            
-            canvas.setFillColor(plate[well.label].project.color if plate[well.label] else 'blue')
+            canvas.setFillColor(plate[well.label].project.color if plate[well.label] else 'white')
             canvas.circle(x, y, well_radius, stroke=1, fill=1)
             txw = canvas.stringWidth(label)
             cx = x - (txw/2)
