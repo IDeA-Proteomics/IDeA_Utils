@@ -93,9 +93,13 @@ class Plate(OrderedDict):
         else:
             self.position_string_list = [f'{c}{i+1}' for c in row_letters[:self.rows] for i in range(self.columns)]
         self.data = {pos : None for pos in self.position_string_list}
-        self.projects = []
+        # self.projects = []
         return
     
+    @property
+    def projects(self):
+        return (list(dict.fromkeys([s.project for s in self.getSamples()])))
+
     @property
     def number_of_wells(self):
         return (self.rows * self.columns)
@@ -137,7 +141,7 @@ class Plate(OrderedDict):
             if p is project:
                 for s in [x for x in p.samples]:
                     self.removeSample(s)
-                self.projects.pop(i)
+                # self.projects.pop(i)
     
     ### Only removes from plate, not from the project
     def removeSample(self, sample):
@@ -156,11 +160,11 @@ class Plate(OrderedDict):
             raise NotEnoughWellsException(project.sample_count, self.number_of_wells - start)
         wells = self.position_string_list[start:start + count]
         if all((self.data[well] == None for well in wells)):
-            self.projects.append(project)
+            # self.projects.append(project)
             for well, sample in list(zip(wells, project.samples[first_sample:last_sample+1])):
                 self[well] = sample
             ### sort projects in the order they appear on plate
-            self.projects.sort(key=lambda pr: pr.samples[0].position.index)
+            # self.projects.sort(key=lambda pr: pr.samples[0].position.index)
         else:
             not_free = [well for well in wells if self[well] != None][0]
             raise WellNotFreeException(not_free)
@@ -251,7 +255,7 @@ class Plate(OrderedDict):
                         if proj is None:
                             proj = Project(proj_name, color_list[pcount%len(color_list)])
                             all_projects.append(proj)
-                        newPlate.projects.append(proj)
+                        # newPlate.projects.append(proj)
                         pcount += 1
                     for p in newPlate.projects:
                         if p.name == proj_name:
