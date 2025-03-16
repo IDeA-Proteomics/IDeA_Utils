@@ -217,7 +217,7 @@ class Plate(OrderedDict):
     @classmethod
     def loadFromFile(cls, filename):
         plates = []  
-        pcount = 0
+        # pcount = 0
         
         with open(filename, 'r') as file:
             reader = csv.reader(file)
@@ -233,13 +233,15 @@ class Plate(OrderedDict):
             all_projects = []
             n, r, c, v = getNRCV(readList[0])
             newPlate = Plate(n, r, c, v)
+            plates.append(newPlate)
 
             for line in list(readList)[1:]:
                 ### detect start of new plate
                 if line[0] == 'Index':
-                    plates.append(newPlate)
+                    # plates.append(newPlate)
                     n, r, c, v = getNRCV(line)
                     newPlate = Plate(n, r, c, v)
+                    plates.append(newPlate)
                     continue
                 position = line[1]
                 proj_name = line[2]
@@ -247,24 +249,35 @@ class Plate(OrderedDict):
                 ### Some plate files don't have the sample number
                 sample_number = int(line[4]) if len(line) > 4 and line[4] != '-' else None
                 if sample_name != 'EMPTY' and proj_name != 'EMPTY':
-                    if proj_name not in [p.name for p in newPlate.projects]:
-                        proj = None
-                        for p in all_projects:
-                            if p.name == proj_name:
-                                proj = p
-                        if proj is None:
-                            proj = Project(proj_name, color_list[pcount%len(color_list)])
-                            all_projects.append(proj)
-                        # newPlate.projects.append(proj)
-                        pcount += 1
-                    for p in newPlate.projects:
-                        if p.name == proj_name:
-                            project = p
-                            break
+                    # if proj_name not in [p.name for p in newPlate.projects]:
+                    #     proj = None
+                    #     for p in all_projects:
+                    #         if p.name == proj_name:
+                    #             proj = p
+                    #     if proj is None:
+                    #         proj = Project(proj_name, color_list[pcount%len(color_list)])
+                    #         all_projects.append(proj)
+                    #     # newPlate.projects.append(proj)
+
+                    #     pcount += 1
+                    # else:
+                    def findProject(name):
+                        for project in {proj for plate in plates for proj in plate.projects}:
+                            if project.name == name:
+                                return project
+                        return None
+
+                    project = findProject(proj_name)
+                    # for p in {x for y in plates for x in y.projects}:
+                    #     if p.name == proj_name:
+                    #         project = p
+                    #         break
+                    if project is None:
+                        project = Project(proj_name, color_list[len({proj for plate in plates for proj in plate.projects})%len(color_list)])
                     sample = Sample(project, sample_name, sample_number)
                     project.addSample(sample)
                     newPlate[position] = sample
-            plates.append(newPlate)
+            # plates.append(newPlate)
                     
         return plates
     
