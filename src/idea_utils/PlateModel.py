@@ -35,7 +35,7 @@ class Sample(object):
         self.project = project
         self.name = name
         self.number = number
-        self.position = None
+        # self.position = None
 
         return
     
@@ -117,8 +117,8 @@ class Plate(OrderedDict):
         if value is not None and not isinstance(value, Sample):
             raise TypeError("Only samples or `None` can be assigned to plate wells")
         self.data[key] = value
-        if value is not None:
-            value.position = self.position_from_string(key)
+        # if value is not None:
+        #     value.position = self.position_from_string(key)
     
     def __getitem__(self, key):
         if isinstance(key, Position):
@@ -143,10 +143,22 @@ class Plate(OrderedDict):
                     self.removeSample(s)
                 # self.projects.pop(i)
     
+    def getSamplePositions(self, sample):
+        if sample is not None and sample in self.getSamples():
+            rv = [self.position_from_string(k) for k,v in self.data.items() if v is sample]
+        else:
+            rv = [None]
+        return rv
+    
+
     ### Only removes from plate, not from the project
     def removeSample(self, sample):
-        if sample is not None and self[sample.position] is sample:
-            self[sample.position] = None
+        # if sample is not None and self[sample.position] is sample:
+        #     self[sample.position] = None
+        if sample is not None:
+            for pos in self.getSamplePositions(sample):
+                if pos is not None:
+                    self[pos] = None
         return
 
     def addProject(self, project, start_pos, first_sample=0, last_sample=None):
