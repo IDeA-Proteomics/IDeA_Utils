@@ -19,13 +19,33 @@ row_letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 class Position(object):
 
-    def __init__(self, row, col, idx, lab):
+    def __init__(self, plate, idx):
 
-        self.row = row
-        self.column = col
+        self.plate = plate
         self.index = idx
-        self.label = lab
         return    
+    
+    @property
+    def row(self):
+        return row_letters.index(self.plate.position_string_list[self.index][:1])
+    
+    @property
+    def column(self):
+        return int(self.plate.position_string_list[self.index][1:]) - 1
+    
+    @property
+    def label(self):
+        return self.plate.position_string_list[self.index]
+    
+    @classmethod
+    def from_string(cls, plate, instr):
+        idx = plate.position_string_list.index(instr)
+        return Position(plate, idx)
+    
+    @classmethod
+    def from_rowcol(cls, plate, row, col):
+        idx = plate.position_string_list.index(f'{row_letters[row]}{col + 1}')
+        return Position(plate, idx)
 
 
 class Sample(object):
@@ -35,7 +55,6 @@ class Sample(object):
         self.project = project
         self.name = name
         self.number = number
-        # self.position = None
 
         return
     
@@ -106,7 +125,7 @@ class Plate(OrderedDict):
     
     @property
     def positions(self):
-        return [self.position_from_string(pos) for pos in self.position_string_list]
+        return [Position.from_string(self, pos) for pos in self.position_string_list]
 
 
     def __setitem__(self, key, value):
@@ -117,8 +136,7 @@ class Plate(OrderedDict):
         if value is not None and not isinstance(value, Sample):
             raise TypeError("Only samples or `None` can be assigned to plate wells")
         self.data[key] = value
-        # if value is not None:
-        #     value.position = self.position_from_string(key)
+
     
     def __getitem__(self, key):
         if isinstance(key, Position):
@@ -127,10 +145,10 @@ class Plate(OrderedDict):
             return self.data[key]
 
     def getUsedWells(self):
-        return [self.position_from_string(key) for key in self.data.keys() if self.data[key] is not None]
+        return [Position.from_string(self, key) for key in self.data.keys() if self.data[key] is not None]
 
     def getFreeWells(self):
-        return [self.position_from_string(key) for key in self.data.keys() if self.data[key] is None]
+        return [Position.from_string(self, key) for key in self.data.keys() if self.data[key] is None]
 
     def getSamples(self):
         return [sample for sample in self.data.values() if sample is not None]
@@ -145,7 +163,7 @@ class Plate(OrderedDict):
     
     def getSamplePositions(self, sample):
         if sample is not None and sample in self.getSamples():
-            rv = [self.position_from_string(k) for k,v in self.data.items() if v is sample]
+            rv = [Position.from_string(self, k) for k,v in self.data.items() if v is sample]
         else:
             rv = [None]
         return rv
@@ -180,23 +198,6 @@ class Plate(OrderedDict):
         else:
             not_free = [well for well in wells if self[well] != None][0]
             raise WellNotFreeException(not_free)
-
-    def position_from_index(self, idx):
-        row = row_letters.index(self.position_string_list[idx][:1])
-        col = int(self.position_string_list[idx][1:]) -1
-        lab = self.position_string_list[idx]
-        return Position(row, col, idx, lab)
-
-    def position_from_rowcol(self, row, col):
-        row = row
-        col = col
-        idx = self.position_string_list.index(f'{row_letters[row]}{col + 1}')
-        lab = self.position_string_list[idx]
-        return Position(row, col, idx, lab)
-    
-    def position_from_string(self, instr):
-        idx = self.position_string_list.index(instr)
-        return self.position_from_index(idx)
 
     ### Output one plate to CSV file writer already open
     @classmethod
